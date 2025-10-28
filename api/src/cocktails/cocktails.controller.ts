@@ -6,10 +6,15 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
+  ValidationPipe,
+  UsePipes,
+  Query,
 } from '@nestjs/common';
 import { CocktailsService } from './cocktails.service';
 import { CreateCocktailDto } from './dto/create-cocktail.dto';
 import { UpdateCocktailDto } from './dto/update-cocktail.dto';
+import { CocktailsQueryDto } from './dto/cocktails-query.dto';
 
 @Controller('cocktails')
 export class CocktailsController {
@@ -21,25 +26,32 @@ export class CocktailsController {
   }
 
   @Get()
-  findAll() {
-    return this.cocktailsService.findAll();
+  @UsePipes(
+    new ValidationPipe({
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+      whitelist: true,
+    }),
+  )
+  findAll(@Query() query: CocktailsQueryDto) {
+    return this.cocktailsService.findAll(query);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cocktailsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.cocktailsService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateCocktailDto: UpdateCocktailDto,
   ) {
-    return this.cocktailsService.update(+id, updateCocktailDto);
+    return this.cocktailsService.update(id, updateCocktailDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cocktailsService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.cocktailsService.remove(id);
   }
 }

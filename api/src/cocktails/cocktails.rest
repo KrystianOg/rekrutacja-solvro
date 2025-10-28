@@ -1,0 +1,37 @@
+POST {{baseUrl}}/cocktails
+content-type: application/json
+
+{
+  "name": "Mojito",
+  "category": "Cocktail",
+  "instructions": "Muddle mint leaves with sugar and lime juice. Add a splash of soda water and fill the glass with ice. Pour the rum over the ice, and top up with soda water. Garnish with a sprig of mint leaves.",
+  "ingredients": [
+    {
+      "ingredientId": 2,
+      "amount": "50",
+      "unit": "ml",
+      "orderIndex": 1
+    }
+  ]
+}
+
+###
+
+GET {{baseUrl}}/cocktails
+
+###
+
+GET {{baseUrl}}/cocktails/1
+
+###
+
+PATCH {{baseUrl}}/cocktails/1
+content-type: application/json
+
+{
+  "name": "Updated Mojito"
+}
+
+###
+
+DELETE {{baseUrl}}/cocktails/1

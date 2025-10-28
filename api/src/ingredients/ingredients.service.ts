@@ -2,43 +2,55 @@ import { Injectable } from '@nestjs/common';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
 import { Ingredient } from './entities/ingredient.entity';
-
-// TODO: Replace with real database integration
-const ingredients: Map<number, Ingredient> = new Map();
+import { InjectRepository } from '@mikro-orm/nestjs';
+import { EntityManager, EntityRepository } from '@mikro-orm/sqlite';
 
 @Injectable()
 export class IngredientsService {
-  create(createIngredientDto: CreateIngredientDto): Ingredient {
-    const ingredient: Ingredient = {
-      id: ingredients.size + 1,
-      ...createIngredientDto,
-    };
-    ingredients.set(ingredient.id, ingredient);
+  constructor(
+    @InjectRepository(Ingredient)
+    private readonly ingredientRepository: EntityRepository<Ingredient>,
+    private readonly em: EntityManager,
+  ) {}
+
+  async create(createIngredientDto: CreateIngredientDto): Promise<Ingredient> {
+    const ingredient = this.ingredientRepository.create(createIngredientDto);
+
+    await this.em.persistAndFlush(ingredient);
+
     return ingredient;
   }
 
-  findAll(): Ingredient[] {
-    return Array.from(ingredients.values());
+  async findAll(): Promise<Ingredient[]> {
+    return this.ingredientRepository.findAll();
   }
 
-  findOne(id: number): Ingredient | undefined {
-    return ingredients.get(id);
+  private async getIngredient(id: number): Promise<Ingredient> {
+    return this.ingredientRepository.findOneOrFail({
+      id,
+    });
   }
 
-  update(
+  async findOne(id: number): Promise<Ingredient> {
+    return this.getIngredient(id);
+  }
+
+  async update(
     id: number,
     updateIngredientDto: UpdateIngredientDto,
-  ): Ingredient | undefined {
-    const ingredient = ingredients.get(id);
-    if (ingredient) {
-      const updatedIngredient = { ...ingredient, ...updateIngredientDto };
-      ingredients.set(id, updatedIngredient);
-      return updatedIngredient;
-    }
-    return undefined;
+  ): Promise<Ingredient> {
+    const ingredient = await this.getIngredient(id);
+
+    this.ingredientRepository.assign(ingredient, updateIngredientDto);
+
+    await this.em.flush();
+
+    return ingredient;
   }
 
-  remove(id: number): boolean {
-    return ingredients.delete(id);
+  async remove(id: number): Promise<void> {
+    const ingredient = await this.getIngredient(id);
+
+    await this.em.removeAndFlush(ingredient);
   }
 }

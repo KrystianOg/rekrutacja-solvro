@@ -86,4 +86,34 @@ Każdy składnik posiada minimum:
 - dokumentacja
 - wsparcie dla filtrowania i sortowania endpointów (filtrowanie zasobów na podstawie określonych parametrów (np. koktajle zawierające określony składnik, koktajle bez alkoholu), sortowanie wyników według różnych pól (np. alfabetycznie po nazwie, według daty dodania, według kategorii koktajli).)
 
-**W razie problemów zapraszamy do kontaktu i powodzenia!**
+## Projekt bazy danych
+
+```mermaid
+erDiagram
+  cocktail ||--o{ cocktail_ingredient : contains
+  ingredient ||--o{ cocktail_ingredient: "used in"
+
+  cocktail {
+    int id PK
+    varchar name "Nazwa koktajlu"
+    varchar category "Kategoria"
+    text instructions "Instrukcja przygotowania"
+  }
+
+  ingredient {
+    int id PK
+    varchar name "Nazwa składnika"
+    text description "Opis składnika"
+    boolean is_alcohol "Czy jest alkoholem"
+    varchar image_url "URL do zdjęcia"
+  }
+
+  cocktail_ingredient {
+    int id PK
+    int cocktail_id FK
+    int ingredient_id FK
+    varchar amount "Ilość"
+    varchar unit "Jednostka"
+    int order_index "Kolejność w przepisie"
+  }
+```
