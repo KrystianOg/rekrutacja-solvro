@@ -1,12 +1,14 @@
 import { IsOptional, IsInt, Max, Min } from 'class-validator';
 import { Type } from 'class-transformer';
 
+const MAX_LIMIT = 100;
+
 export class PaginationDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @Min(0)
-  @Max(100)
+  @Min(1)
+  @Max(MAX_LIMIT)
   limit?: number;
 
   @IsOptional()

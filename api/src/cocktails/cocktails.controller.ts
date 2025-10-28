@@ -7,8 +7,6 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  ValidationPipe,
-  UsePipes,
   Query,
 } from '@nestjs/common';
 import { CocktailsService } from './cocktails.service';
@@ -26,14 +24,7 @@ export class CocktailsController {
   }
 
   @Get()
-  @UsePipes(
-    new ValidationPipe({
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-      whitelist: true,
-    }),
-  )
-  findAll(@Query() query: CocktailsQueryDto) {
+  findAll(@Query() query: CocktailsQueryDto = {}) {
     return this.cocktailsService.findAll(query);
   }
 

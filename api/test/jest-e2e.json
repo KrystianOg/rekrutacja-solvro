@@ -1,8 +1,13 @@
 {
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/src/$1",
+    "^test/(.*)$": "<rootDir>/test/$1"
+  },
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
+  "transformIgnorePatterns": ["node_modules/(?!(?:.pnpm/)?@faker-js/faker)/"],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   }

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateCocktailDto } from './dto/create-cocktail.dto';
 import { UpdateCocktailDto } from './dto/update-cocktail.dto';
 import { Cocktail } from './entities/cocktail.entity';
@@ -28,6 +28,18 @@ export class CocktailsService {
   @Transactional()
   async create(createCocktailDto: CreateCocktailDto): Promise<Cocktail> {
     const cocktail = this.cocktailRepository.create(createCocktailDto);
+
+    const ingredientIds = createCocktailDto.ingredients.map(
+      (ingredient) => ingredient.ingredientId,
+    );
+
+    const existingIngredients = await this.em.find(Ingredient, {
+      id: { $in: ingredientIds },
+    });
+
+    if (existingIngredients?.length !== ingredientIds.length) {
+      throw new BadRequestException('One or more ingredients do not exist');
+    }
 
     const cocktailIngredients = createCocktailDto.ingredients.map(
       (cocktailIngredientDto) => {
@@ -81,7 +93,9 @@ export class CocktailsService {
     return qb;
   }
 
-  async findAll(query: CocktailsQueryDto): Promise<Cocktail[]> {
+  async findAll(
+    query: CocktailsQueryDto | undefined = {},
+  ): Promise<Cocktail[]> {
     const qb = this.cocktailRepository.createQueryBuilder('cocktail');
 
     if (query.isAlcoholic !== undefined) {
@@ -94,10 +108,19 @@ export class CocktailsService {
 
     const results = await qb.getResult();
 
+    if (
+      results.length >
+      (query.limit ||
+        this.configService.get('pagination', { infer: true })!.DefaultLimit)
+    ) {
+      // TODO: return info about next page
+      results.pop();
+    }
+
     return results;
   }
 
-  async getCocktail<Hint extends string = never>(
+  private async getCocktail<Hint extends string = never>(
     id: number,
     options?: FindOneOptions<Cocktail, Hint>,
   ): Promise<Cocktail> {

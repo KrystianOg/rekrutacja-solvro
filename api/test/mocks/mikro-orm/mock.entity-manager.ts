@@ -1,0 +1,17 @@
+export const mockEntityManager = {
+  createQueryBuilder: jest.fn(),
+  qb: jest.fn(),
+  execute: jest.fn(),
+  getRepository: jest.fn(),
+  getReference: jest.fn(),
+  persistAndFlush: jest.fn(),
+  flush: jest.fn(),
+  removeAndFlush: jest.fn(),
+  find: jest.fn(),
+  findAll: jest.fn(),
+  findByCursor: jest.fn(),
+  findOne: jest.fn(),
+  findOneOrFail: jest.fn(),
+  upsert: jest.fn(),
+  remove: jest.fn(),
+};
