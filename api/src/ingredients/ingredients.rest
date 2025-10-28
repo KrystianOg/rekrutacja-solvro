@@ -1,0 +1,30 @@
+POST {{baseUrl}}/ingredients
+content-type: application/json
+
+{
+  "name": "Lemon Juice",
+  "description": "Freshly squeezed lemon juice",
+  "isAlcoholic": false,
+  "imageUrl": "http://example.com/images/lemon-juice.png"
+}
+
+###
+
+GET {{baseUrl}}/ingredients
+
+###
+
+GET {{baseUrl}}/ingredients/1
+
+###
+
+PATCH {{baseUrl}}/ingredients/1
+content-type: application/json
+
+{
+  "description": "Freshly squeezed organic lemon juice"
+}
+
+###
+
+DELETE {{baseUrl}}/ingredients/1
