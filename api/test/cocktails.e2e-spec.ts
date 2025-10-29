@@ -8,9 +8,10 @@ import {
 } from './utils/test-factories';
 import { Cocktail } from 'src/cocktails/entities/cocktail.entity';
 import { setupE2ETest, teardownE2ETest } from './utils/e2e-setup';
+import { App } from 'supertest/types';
 
 describe('Cocktails E2E', () => {
-  let app: INestApplication;
+  let app: INestApplication<App>;
   let orm: MikroORM<SqliteDriver>;
 
   beforeAll(async () => {
