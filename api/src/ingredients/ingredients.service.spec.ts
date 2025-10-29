@@ -12,6 +12,7 @@ import { generateIngredientData } from 'test/utils/test-factories';
 describe('IngredientsService', () => {
   let service: IngredientsService;
   let repository: typeof mockRepository;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let em: typeof mockEntityManager;
 
   beforeEach(async () => {
@@ -44,9 +45,10 @@ describe('IngredientsService', () => {
   });
 
   describe('create', () => {
+    // TODO: implement test
     it('should create ingredient', async () => {});
 
-    it('should throw validation error', async () => {
+    it('should throw validation error', () => {
       const mockIngredient = generateIngredientData();
       repository.create.mockReturnValue({
         id: 1,
