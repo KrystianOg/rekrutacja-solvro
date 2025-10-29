@@ -45,23 +45,15 @@ jobs:
 
       - name: Run ESLint
         run: pnpm lint
-        env:
-          CI: true
 
       - name: Run unit tests
         run: pnpm test --ci --runInBand
-        env:
-          CI: true
 
       - name: Run e2e tests
         run: pnpm test:e2e --ci --runInBand
-        env:
-          CI: true
 
       - name: Run coverage tests
         run: pnpm test:cov
-        env:
-          CI: true
 
       - name: Upload coverage report
         if: success()
