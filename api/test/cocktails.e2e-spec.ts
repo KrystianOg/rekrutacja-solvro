@@ -57,7 +57,7 @@ describe('Cocktails E2E', () => {
         name: 'Mojito',
         category: 'Classic',
         instructions: 'Muddle mint, add rum, lime, sugar, and soda',
-        ingredients: [
+        cocktailIngredients: [
           {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             id: expect.any(Number),
