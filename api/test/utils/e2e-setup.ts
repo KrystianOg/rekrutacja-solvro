@@ -4,6 +4,7 @@ import { MikroORM } from '@mikro-orm/core';
 import { SqliteDriver } from '@mikro-orm/sqlite';
 import { AppModule } from '../../src/app.module';
 import { App } from 'supertest/types';
+import config from '../../mikro-orm.config';
 
 export interface TestSetup {
   app: INestApplication<App>;
@@ -22,21 +23,39 @@ export interface TestSetup {
 export async function setupE2ETest(): Promise<TestSetup> {
   const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+  })
+    .overrideProvider(MikroORM)
+    .useFactory({
+      factory: () => {
+        const testConfig = {
+          ...config,
+          dbName: ':memory:',
+          allowGlobalContext: true,
+        };
+        const orm = MikroORM.init<SqliteDriver>(testConfig);
+        return orm;
+      },
+    })
+
+    .compile();
 
   const app = moduleFixture.createNestApplication<INestApplication<App>>();
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
       whitelist: true,
     }),
   );
-  await app.init();
 
   const orm = moduleFixture.get<MikroORM<SqliteDriver>>(MikroORM);
 
   // Ensure a clean state by dropping and recreating the schema
   await orm.getSchemaGenerator().refreshDatabase();
+
+  await app.init();
 
   return { app, orm };
 }
