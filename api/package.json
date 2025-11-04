@@ -86,6 +86,7 @@
       "**/*.(t|j)s",
       "!**/*.d.ts",
       "!**/main.ts",
+      "!**/*.entity.ts",
       "!**/*.module.ts"
     ],
     "coveragePathIgnorePatterns": [

@@ -14,4 +14,5 @@ export default defineConfig({
     path: './db/migrations',
     transactional: true,
   },
+  ignoreUndefinedInQuery: true,
 });
