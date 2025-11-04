@@ -1,4 +1,3 @@
-import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import {
   createAndPersistCocktail,
@@ -64,7 +63,7 @@ describe('Cocktails E2E', () => {
     });
 
     it('should return 400 when ingredient does not exist', async () => {
-      const createDto = {
+      const createDto: CreateCocktailDto = {
         name: 'Mojito',
         category: 'Classic',
         instructions: 'Mix it up',
@@ -87,46 +86,65 @@ describe('Cocktails E2E', () => {
 
   describe('GET /cocktails', () => {
     beforeEach(async () => {
-      await createAndPersistCocktail(orm);
-      await createAndPersistCocktail(orm);
-      await createAndPersistCocktail(orm);
+      await Promise.all(
+        Array.from({ length: 3 }).map(() => createAndPersistCocktail(orm)),
+      );
     });
 
-    it('should return all cocktails', async () => {
+    it('should return cursor paginated cocktails', async () => {
       const response = await request(app.getHttpServer()).get('/cocktails');
 
-      const body = response.body as Cocktail[];
+      const body = response.body as CursorResponse<Cocktail>;
+      const item0 = body.items[0];
 
-      expect(body).toHaveLength(3);
-      expect(body[0]).toHaveProperty('id');
-      expect(body[0]).toHaveProperty('name');
+      expect(body.items).toHaveLength(3);
+      expect(body.totalCount).toBe(3);
+      expect(item0).toHaveProperty('id');
+      expect(item0).toHaveProperty('name');
     });
 
     it('should apply limit', async () => {
       const response = await request(app.getHttpServer())
-        .get('/cocktails?limit=2')
+        .get('/cocktails?limit=11')
         .expect(200);
 
-      const body = response.body as Cocktail[];
+      const body = response.body as CursorResponse<Cocktail>;
 
-      expect(body.length).toBeLessThanOrEqual(2);
+      expect(body.items.length).toBeLessThanOrEqual(11);
     });
 
     it('should apply cursor-based pagination', async () => {
+      await Promise.all(
+        Array.from({ length: 8 }).map(() => createAndPersistCocktail(orm)),
+      );
       const firstPage = await request(app.getHttpServer())
-        .get('/cocktails?limit=1')
+        .get('/cocktails?limit=10')
         .expect(200);
 
-      const firstPageBody = firstPage.body as Cocktail[];
-      const firstId = firstPageBody[0].id;
+      const firstPageBody = firstPage.body as CursorResponse<Cocktail>;
+
+      const firstId = firstPageBody.items[0].id;
 
       const secondPage = await request(app.getHttpServer())
-        .get(`/cocktails?limit=1&cursor=${firstId}`)
+        .get(`/cocktails?limit=10&cursor=${firstPageBody.endCursor}`)
         .expect(200);
-      const secondPageBody = secondPage.body as Cocktail[];
+      const secondPageBody = secondPage.body as CursorResponse<Cocktail>;
 
-      expect(secondPageBody).toHaveLength(1);
-      expect(secondPageBody[0].id).toBeGreaterThan(firstId);
+      expect(secondPageBody.items).toHaveLength(1);
+      expect(secondPageBody.items[0].id).toBeLessThan(firstId);
+    });
+
+    it('should filter by category', async () => {
+      await createAndPersistCocktail(orm, { category: 'Classic' });
+      const response = await request(app.getHttpServer())
+        .get('/cocktails?category=Classic')
+        .expect(200);
+
+      const body = response.body as CursorResponse<Cocktail>;
+
+      body.items.forEach((cocktail) => {
+        expect(cocktail.category).toBe('Classic');
+      });
     });
   });
 

@@ -7,14 +7,12 @@ import {
   EntityManager,
   EntityRepository,
   FindOneOptions,
-  QueryBuilder,
   Transactional,
 } from '@mikro-orm/sqlite';
 import { Ingredient } from 'src/ingredients/entities/ingredient.entity';
 import { CocktailIngredient } from './entities/cocktail-ingredient.entity';
 import { CocktailsQueryDto } from './dto/cocktails-query.dto';
-import { ConfigService } from '@nestjs/config';
-import { AppConfig } from 'src/app.config';
+import { CursorResponse, serializeCursor } from 'src/utils/cursor-pagination';
 
 @Injectable()
 export class CocktailsService {
@@ -22,7 +20,6 @@ export class CocktailsService {
     @InjectRepository(Cocktail)
     private readonly cocktailRepository: EntityRepository<Cocktail>,
     private readonly em: EntityManager,
-    private readonly configService: ConfigService<AppConfig>,
   ) {}
 
   @Transactional()
@@ -67,57 +64,26 @@ export class CocktailsService {
     return cocktail;
   }
 
-  private paginate<Entity extends object>(
-    qb: QueryBuilder<Entity>,
-    limit?: number,
-    cursor?: number,
-  ) {
-    const { DefaultLimit, MaxLimit } = this.configService.get('pagination', {
-      infer: true,
-    })!;
-
-    // +1 to check if there's a next page
-    const effectiveLimit = Math.min(limit || DefaultLimit, MaxLimit) + 1;
-    qb.limit(effectiveLimit);
-
-    if (cursor) {
-      qb.andWhere({
-        id: {
-          $gt: cursor,
-        },
-      });
-    }
-
-    qb.orderBy({ id: 'ASC' });
-
-    return qb;
-  }
-
   async findAll(
     query: CocktailsQueryDto | undefined = {},
-  ): Promise<Cocktail[]> {
-    const qb = this.cocktailRepository.createQueryBuilder('cocktail');
+  ): Promise<CursorResponse<Cocktail>> {
+    const results = await this.cocktailRepository.findByCursor(
+      {
+        cocktailIngredients: {
+          ingredient: {
+            isAlcoholic: query.isAlcoholic,
+          },
+        },
+        category: query.category,
+      },
+      {
+        first: query.limit,
+        after: query.cursor,
+        orderBy: { id: 'desc' },
+      },
+    );
 
-    if (query.isAlcoholic !== undefined) {
-      qb.where({
-        isAlcoholic: query.isAlcoholic,
-      });
-    }
-
-    this.paginate(qb, query.limit, query.cursor);
-
-    const results = await qb.getResult();
-
-    if (
-      results.length >
-      (query.limit ||
-        this.configService.get('pagination', { infer: true })!.DefaultLimit)
-    ) {
-      // TODO: return info about next page
-      results.pop();
-    }
-
-    return results;
+    return serializeCursor(results);
   }
 
   private async getCocktail<Hint extends string = never>(
