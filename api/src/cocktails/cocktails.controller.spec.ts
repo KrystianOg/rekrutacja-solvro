@@ -6,18 +6,11 @@ import {
   mockCreateCocktailDtoWithoutIngredients,
 } from 'test/mocks/utils/cocktail.fixtures';
 import { generateCocktailData } from 'test/utils/test-factories';
-
-const mockCocktailsService = {
-  create: jest.fn(),
-  findAll: jest.fn(),
-  findOne: jest.fn(),
-  update: jest.fn(),
-  remove: jest.fn(),
-};
+import { createMockService } from 'test/mocks/mikro-orm';
 
 describe('CocktailsController', () => {
   let controller: CocktailsController;
-  let service: typeof mockCocktailsService;
+  let service: jest.Mocked<CocktailsService>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -25,7 +18,7 @@ describe('CocktailsController', () => {
       providers: [
         {
           provide: CocktailsService,
-          useValue: mockCocktailsService,
+          useValue: createMockService(CocktailsService),
         },
       ],
     }).compile();
@@ -33,11 +26,12 @@ describe('CocktailsController', () => {
     controller = module.get<CocktailsController>(CocktailsController);
     service = module.get(CocktailsService);
     jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   describe('POST /cocktails - create', () => {
     it('should create a cocktail with ingredients', async () => {
-      const mockCocktail = { id: 1, ...generateCocktailData() };
+      const mockCocktail = generateCocktailData();
       service.create.mockResolvedValue(mockCocktail);
 
       const result = await controller.create(
@@ -52,7 +46,7 @@ describe('CocktailsController', () => {
     });
 
     it('should create a cocktail without ingredients', async () => {
-      const mockCocktail = { id: 2, ...generateCocktailData() };
+      const mockCocktail = generateCocktailData();
       service.create.mockResolvedValue(mockCocktail);
 
       const result = await controller.create(
@@ -69,10 +63,7 @@ describe('CocktailsController', () => {
 
   describe('GET /cocktails - findAll', () => {
     it('should return all cocktails with empty query', async () => {
-      const mockCocktails = [
-        { id: 1, name: 'Martini', isAlcoholic: true },
-        { id: 2, name: 'Virgin Mojito', isAlcoholic: false },
-      ];
+      const mockCocktails = generateCocktailData.cursor(3);
       service.findAll.mockResolvedValue(mockCocktails);
 
       const result = await controller.findAll();
@@ -84,7 +75,7 @@ describe('CocktailsController', () => {
     });
 
     it('should filter by isAlcoholic=true', async () => {
-      const mockCocktails = [{ id: 1, name: 'Martini', isAlcoholic: true }];
+      const mockCocktails = generateCocktailData.cursor(2);
       service.findAll.mockResolvedValue(mockCocktails);
 
       const result = await controller.findAll({ isAlcoholic: true });
@@ -94,9 +85,7 @@ describe('CocktailsController', () => {
     });
 
     it('should filter by isAlcoholic=false', async () => {
-      const mockCocktails = [
-        { id: 2, name: 'Virgin Mojito', isAlcoholic: false },
-      ];
+      const mockCocktails = generateCocktailData.cursor(2);
       service.findAll.mockResolvedValue(mockCocktails);
 
       const result = await controller.findAll({ isAlcoholic: false });
@@ -106,7 +95,7 @@ describe('CocktailsController', () => {
     });
 
     it('should apply pagination with limit', async () => {
-      const mockCocktails = [{ id: 1, name: 'Martini' }];
+      const mockCocktails = generateCocktailData.cursor(5);
       service.findAll.mockResolvedValue(mockCocktails);
 
       const result = await controller.findAll({ limit: 10 });
@@ -116,19 +105,22 @@ describe('CocktailsController', () => {
     });
 
     it('should apply pagination with limit and cursor', async () => {
-      const mockCocktails = [{ id: 5, name: 'Daiquiri' }];
+      const mockCocktails = generateCocktailData.cursor(4);
       service.findAll.mockResolvedValue(mockCocktails);
 
-      const result = await controller.findAll({ limit: 10, cursor: 4 });
+      const result = await controller.findAll({ limit: 10, cursor: 'abc' });
 
-      expect(service.findAll).toHaveBeenCalledWith({ limit: 10, cursor: 4 });
+      expect(service.findAll).toHaveBeenCalledWith({
+        limit: 10,
+        cursor: 'abc',
+      });
       expect(result).toEqual(mockCocktails);
     });
   });
 
   describe('GET /cocktails/:id - findOne', () => {
     it('should return a single cocktail by id', async () => {
-      const mockCocktail = { id: 1, name: 'Martini', isAlcoholic: true };
+      const mockCocktail = generateCocktailData();
       service.findOne.mockResolvedValue(mockCocktail);
 
       const result = await controller.findOne(1);
@@ -139,7 +131,7 @@ describe('CocktailsController', () => {
     });
 
     it('should handle different cocktail ids', async () => {
-      const mockCocktail = { id: 99, name: 'Old Fashioned', isAlcoholic: true };
+      const mockCocktail = generateCocktailData();
       service.findOne.mockResolvedValue(mockCocktail);
 
       const result = await controller.findOne(99);
@@ -152,11 +144,7 @@ describe('CocktailsController', () => {
   describe('PATCH /cocktails/:id - update', () => {
     it('should update a cocktail', async () => {
       const updateDto = { name: 'Updated Martini' };
-      const mockCocktail = {
-        id: 1,
-        name: 'Updated Martini',
-        isAlcoholic: true,
-      };
+      const mockCocktail = generateCocktailData();
       service.update.mockResolvedValue(mockCocktail);
 
       const result = await controller.update(1, updateDto);
@@ -172,7 +160,7 @@ describe('CocktailsController', () => {
         instructions: 'New instructions',
         isAlcoholic: false,
       };
-      const mockCocktail = { id: 2, ...updateDto };
+      const mockCocktail = generateCocktailData();
       service.update.mockResolvedValue(mockCocktail);
 
       const result = await controller.update(2, updateDto);

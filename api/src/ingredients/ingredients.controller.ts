@@ -7,10 +7,12 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { IngredientsService } from './ingredients.service';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
 import { UpdateIngredientDto } from './dto/update-ingredient.dto';
+import { IngredientsQueryDto } from './dto/ingredient-query.dto';
 
 @Controller('ingredients')
 export class IngredientsController {
@@ -22,8 +24,8 @@ export class IngredientsController {
   }
 
   @Get()
-  findAll() {
-    return this.ingredientsService.findAll();
+  findAll(@Query() query: IngredientsQueryDto = {}) {
+    return this.ingredientsService.findAll(query);
   }
 
   @Get(':id')

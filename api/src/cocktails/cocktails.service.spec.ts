@@ -6,26 +6,13 @@ import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@mikro-orm/nestjs';
 
 import { mockConfigService } from 'test/mocks/nestjs';
-import {
-  mockEntityManager,
-  mockQueryBuilder,
-  mockRepository,
-} from 'test/mocks/mikro-orm';
+import { mockEntityManager, mockRepository } from 'test/mocks/mikro-orm';
 import {
   mockCreateCocktailDtoWithIngredients,
   mockCreateCocktailDtoWithoutIngredients,
   mockIngredientRef,
 } from 'test/mocks/utils/cocktail.fixtures';
 import { Ingredient } from 'src/ingredients/entities/ingredient.entity';
-
-// Mock the Transactional decorator
-// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-jest.mock('@mikro-orm/core', () => ({
-  ...jest.requireActual('@mikro-orm/core'),
-  Transactional:
-    () => (target: any, propertyKey: string, descriptor: PropertyDescriptor) =>
-      descriptor,
-}));
 
 describe('CocktailsService', () => {
   let service: CocktailsService;
@@ -108,46 +95,65 @@ describe('CocktailsService', () => {
         { id: 1, name: 'Mojito' },
         { id: 2, name: 'Daiquiri' },
       ];
-      mockQueryBuilder.getResult.mockResolvedValue(mockCocktails);
-      repository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      repository.findByCursor.mockResolvedValue({
+        items: mockCocktails,
+      });
 
       const result = await service.findAll();
 
-      expect(repository.createQueryBuilder).toHaveBeenCalledWith('cocktail');
-      expect(mockQueryBuilder.where).not.toHaveBeenCalled();
-      expect(mockQueryBuilder.getResult).toHaveBeenCalled();
-      expect(result).toEqual(mockCocktails);
+      expect(repository.findByCursor).toHaveBeenCalledWith(
+        {
+          cocktailIngredients: {
+            ingredient: {
+              isAlcoholic: undefined,
+            },
+          },
+          category: undefined,
+        },
+        {
+          first: undefined,
+          after: undefined,
+          orderBy: { id: 'desc' },
+        },
+      );
+      expect(result.items).toEqual(mockCocktails);
     });
 
     it('should filter by isAlcoholic', async () => {
       const mockCocktails = [{ id: 1, name: 'Mojito', isAlcoholic: true }];
-      mockQueryBuilder.getResult.mockResolvedValue(mockCocktails);
-      repository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      repository.findByCursor.mockResolvedValue({
+        items: mockCocktails,
+      });
 
       const result = await service.findAll({ isAlcoholic: true });
 
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith({
-        isAlcoholic: true,
-      });
-      expect(result).toEqual(mockCocktails);
+      expect(result.items).toEqual(mockCocktails);
     });
 
     it('should apply pagination with limit and cursor', async () => {
       const mockCocktails = [{ id: 5, name: 'Martini' }];
-      mockQueryBuilder.getResult.mockResolvedValue(mockCocktails);
-      repository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
-
-      const result = await service.findAll({ limit: 10, cursor: 4 });
-
-      // 11 as we check if there exist next value so 10 + 1
-      expect(mockQueryBuilder.limit).toHaveBeenCalledWith(11);
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith({
-        id: {
-          $gt: 4,
-        },
+      repository.findByCursor.mockResolvedValue({
+        items: mockCocktails,
       });
-      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith({ id: 'ASC' });
-      expect(result).toEqual(mockCocktails);
+
+      const result = await service.findAll({ limit: 10, cursor: 'abc123' });
+
+      expect(repository.findByCursor).toHaveBeenCalledWith(
+        {
+          cocktailIngredients: {
+            ingredient: {
+              isAlcoholic: undefined,
+            },
+          },
+          category: undefined,
+        },
+        {
+          first: 10,
+          after: 'abc123',
+          orderBy: { id: 'desc' },
+        },
+      );
+      expect(result.items).toEqual(mockCocktails);
     });
   });
 

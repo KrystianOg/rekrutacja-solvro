@@ -1,5 +1,4 @@
 import { IsOptional, IsString, IsBoolean, IsIn, IsInt } from 'class-validator';
-import { Type } from 'class-transformer';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 export class CocktailsQueryDto extends PaginationDto {
@@ -12,13 +11,11 @@ export class CocktailsQueryDto extends PaginationDto {
   category?: string;
 
   @IsOptional()
-  @Type(() => Boolean)
   @IsBoolean()
   isAlcoholic?: boolean;
 
   @IsOptional()
   @IsInt()
-  @Type(() => Number)
   ingredients?: number;
 
   @IsOptional()

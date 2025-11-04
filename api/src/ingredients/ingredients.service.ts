@@ -4,6 +4,8 @@ import { UpdateIngredientDto } from './dto/update-ingredient.dto';
 import { Ingredient } from './entities/ingredient.entity';
 import { InjectRepository } from '@mikro-orm/nestjs';
 import { EntityManager, EntityRepository } from '@mikro-orm/sqlite';
+import { CursorResponse } from 'src/utils/cursor-pagination';
+import { IngredientsQueryDto } from './dto/ingredient-query.dto';
 
 @Injectable()
 export class IngredientsService {
@@ -21,8 +23,19 @@ export class IngredientsService {
     return ingredient;
   }
 
-  async findAll(): Promise<Ingredient[]> {
-    return this.ingredientRepository.findAll();
+  async findAll(
+    query: IngredientsQueryDto = {},
+  ): Promise<CursorResponse<Ingredient>> {
+    const results = await this.ingredientRepository.findByCursor(
+      {},
+      {
+        first: query.limit,
+        after: query.cursor,
+        orderBy: { id: 'desc' },
+      },
+    );
+
+    return results;
   }
 
   private async getIngredient(id: number): Promise<Ingredient> {

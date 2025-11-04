@@ -37,19 +37,6 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
 ## Backend task
 
 **Ze względu na to, że w naszych projektach pracujemy głównie we frameworkach JavaScriptu akceptujemy zadania tylko w TypeScript/JavaScript. W kole używamy głównie [NestJS](https://docs.nestjs.com/), ale nie przejmuj się jeśli go nie znasz, nauczysz się go z nami w pierwszych tygodniach, chociaż zachęcamy do podjęcia rękawic i spróbowania już podczas rekrutacji😉**

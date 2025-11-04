@@ -5,4 +5,5 @@ export const mockRepository = {
   findOneOrFail: jest.fn(),
   assign: jest.fn(),
   createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
+  findByCursor: jest.fn(),
 };
