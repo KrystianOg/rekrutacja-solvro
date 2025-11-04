@@ -1,33 +1,15 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
-import { MikroORM } from '@mikro-orm/core';
-import { SqliteDriver } from '@mikro-orm/sqlite';
 import {
   createAndPersistCocktail,
   createAndPersistIngredient,
 } from './utils/test-factories';
 import { Cocktail } from 'src/cocktails/entities/cocktail.entity';
-import { setupE2ETest, teardownE2ETest } from './utils/e2e-setup';
-import { App } from 'supertest/types';
+import { CreateCocktailDto } from 'src/cocktails/dto/create-cocktail.dto';
+import { CursorResponse } from 'src/utils/cursor-pagination';
+import { app, orm } from './setup-e2e';
 
 describe('Cocktails E2E', () => {
-  let app: INestApplication<App>;
-  let orm: MikroORM<SqliteDriver>;
-
-  beforeAll(async () => {
-    const setup = await setupE2ETest();
-    app = setup.app;
-    orm = setup.orm;
-  });
-
-  afterAll(async () => {
-    await teardownE2ETest(app, orm);
-  });
-
-  afterEach(async () => {
-    await orm.getSchemaGenerator().refreshDatabase();
-  });
-
   describe('POST /cocktails', () => {
     it('should create a cocktail with ingredients', async () => {
       const ingredient = await createAndPersistIngredient(orm);

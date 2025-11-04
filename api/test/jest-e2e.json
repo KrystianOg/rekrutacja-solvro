@@ -10,5 +10,6 @@
   "transformIgnorePatterns": ["node_modules/(?!(?:.pnpm/)?@faker-js/faker)/"],
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "setupFilesAfterEnv": ["<rootDir>/test/setup-e2e.ts"]
 }
